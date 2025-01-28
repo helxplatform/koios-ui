@@ -16,3 +16,13 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.main-container {
+  transition: background-color 0.3s, color 0.3s;
+  color: #393939; /* Default to light mode colors */
+  background-color: #f4f4f9; /* Default to light mode background */
+
+}
+.width-50 {
+  width: 50%;
+}
