@@ -10,6 +10,7 @@ import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { SessionMessageCustom } from './components/SessionMessage';
 import { ConversationExt } from './types/types';
+import { findDbGaPIds } from './utils/formatting.util';
 
 import {
   Chat,
@@ -58,12 +59,21 @@ function App() {
 
       const data = await sendChatMessage(message, curr.conversations.map(convo => [convo.question, convo.response]));
       const output = data.output.output;
+
+      const accession_ids = findDbGaPIds(output);
+      
+      const sources:ConversationSource[] = accession_ids.phs?.map(study_id => ({
+        id: study_id,
+        url: "https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/GetListOfAllObjects.cgi?study_id=" + study_id,
+        title: study_id
+      }))
       
       const knowledge_graph = data.output?.extra?.knowledge_graph;
       const processedKg = processKnowledgeGraph(knowledge_graph);
 
       newMessage.kg = processedKg;
       newMessage.response = output;
+      newMessage.sources = sources;
       setSessions([...sessions.filter((s) => s.id !== activeId), updated]);
       setLoading(false);      
 
