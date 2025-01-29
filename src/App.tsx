@@ -64,7 +64,7 @@ function App() {
       
       const sources:ConversationSource[] = accession_ids.phs?.map(study_id => ({
         id: study_id,
-        url: "https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/GetListOfAllObjects.cgi?study_id=" + study_id,
+        url: "https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=" + study_id,
         title: study_id
       }))
       
