@@ -49,6 +49,7 @@ export const GraphVisualization: FC<Props> = ({ kg, id }) => {
                     nodeRelSize={6}
                     linkWidth={2}
                     nodeLabel="name"
+                    nodeAutoColorBy={d => d.node_color}
                 />
             )}
         </div>

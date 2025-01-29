@@ -27,10 +27,18 @@ export const SessionMessageCustom: FC<Props> = ({ conversation, isLast }) => {
     <div className="flex flex-col gap-4">
       <div className="flex flex-row gap-4 w-full">
         <div className='flex-1'>
-                            <div className="break-words overflow-wrap-anywhere">
-                            <MessageResponse response={conversation.response || "No answer can be found"} />
-                            </div>
-                            <MessageSources sources={conversation.sources || []} />
+            {conversation.response === undefined ? (
+            <div className="flex justify-center items-center h-24">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            </div>
+            ) : (
+            <>
+                <div className="break-words overflow-wrap-anywhere">
+                <MessageResponse response={conversation.response || "No answer can be found"} />
+                </div>
+                <MessageSources sources={conversation.sources || []} />
+            </>
+            )}
         </div>
     
         {conversation.kg && 
