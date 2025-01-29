@@ -29,21 +29,21 @@ import { stringify } from 'node:querystring';
 function App() {
   const { sessions, setSessions, handleNewSession, handleDelete, activeId, setActiveId, handleDownloadSession} = useSessions();
   // const [activeId, setActiveId] = useState<string>();
-  const [loading, setLoading] = useState(false);   
-  
+  const [loading, setLoading] = useState(false);     
 
   const handleNewMessage = async (message: string) => {
     setLoading(true);
-    const source: ConversationSource = {
-      title: "source abc"
-    }
+
+    // const source: ConversationSource = {
+    //   title: "source abc"
+    // }
     const newMessage: ConversationExt = {    
         id: 'error',    
         question: message,        
         createdAt: new Date(),
         updatedAt: new Date(),
         kg: null ,
-        sources: [source]    
+        // sources: [source]    
       };
     try {
       const curr = sessions.find(s => s.id === activeId);
