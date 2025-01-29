@@ -42,7 +42,7 @@ export const SessionMessageCustom: FC<Props> = ({ conversation, isLast }) => {
         </div>
     
         {conversation.kg && 
-            <div className="flex-1 min-w-[300px] h-[450px]">
+            <div className="flex-1 min-w-[300px] h-[650px]">
             <GraphVisualization kg={conversation.kg} id={conversation.id}  
             />
             </div>}

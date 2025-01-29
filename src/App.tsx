@@ -20,46 +20,30 @@ import {
   SessionMessages,
   SessionMessagesHeader,
   SessionsList,
+  ConversationSource
 } from 'reachat';
 import { chatTheme } from './theme';
 import { stringify } from 'node:querystring';
 
 
 function App() {
-  const { sessions, setSessions, handleNewSession, handleDelete, activeId, setActiveId} = useSessions();
+  const { sessions, setSessions, handleNewSession, handleDelete, activeId, setActiveId, handleDownloadSession} = useSessions();
   // const [activeId, setActiveId] = useState<string>();
-  const [loading, setLoading] = useState(false); 
-
-
-  const handleDownloadSession = () => {
-    const activeSession = sessions.find(s => s.id === activeId);
-    if (!activeSession) return;
-    const sessionDate = activeSession.createdAt?.toISOString().split('T')[0];
-    const data_to_download = activeSession.conversations.map(convo => ({
-      user: convo.question,
-      assistant: convo.response
-    }));
-    const dataStr = JSON.stringify(data_to_download, null, 2);
-    const blob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `session-${sessionDate}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
+  const [loading, setLoading] = useState(false);   
   
 
   const handleNewMessage = async (message: string) => {
     setLoading(true);
+    const source: ConversationSource = {
+      title: "source abc"
+    }
     const newMessage: ConversationExt = {    
         id: 'error',    
         question: message,        
         createdAt: new Date(),
         updatedAt: new Date(),
-        kg: null        
+        kg: null ,
+        sources: [source]    
       };
     try {
       const curr = sessions.find(s => s.id === activeId);
@@ -108,8 +92,8 @@ function App() {
             <div className="flex gap-2 p-2">
               <NewSessionButton/>
               <button
-                onClick={handleDownloadSession}
                 disabled={!activeId}
+                onClick={handleDownloadSession}                
                 className="whitespace-no-wrap select-none items-center justify-center font-sans font-semibold disabled:cursor-not-allowed data-[variant=filled]:disabled:bg-gray-600 disabled:text-gray-400 flex w-full light:text-gray-100 border-primary text-base px-4 py-2 leading-[normal] m-0 relative mb-4 rounded-[10px] text-white bg-[#1a568c] hover:bg-[#41ABF5] transition-colors"
               >
                 Export Chat
