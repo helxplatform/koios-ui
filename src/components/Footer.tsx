@@ -6,7 +6,7 @@ export const Footer = () => (
             <p className="leading-relaxed">
               For questions or feedback, please visit{" "}
               <a 
-                href="http://link-to-google-form" 
+                href="https://docs.google.com/forms/d/e/1FAIpQLSfMeejDbCv9lcc8nkYKMHpbsTMDlwbcoYx0eYG1cu5lT4yK7g/viewform" 
                 className="text-blue-600 hover:text-blue-800 underline"
               >
                 [link to google form]

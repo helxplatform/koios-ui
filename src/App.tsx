@@ -1,9 +1,8 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import './App.css';
 // import Placeholder from 'react-bootstrap/Placeholder';
 
 import { useSessions } from './hooks/useSessions';
-import { useGraphResize } from './hooks/useGraphResize';
 import { sendChatMessage } from './services/api.service';
 import { processKnowledgeGraph } from './utils/graph.utils';
 import { Header } from './components/Header';
@@ -24,7 +23,7 @@ import {
   ConversationSource
 } from 'reachat';
 import { chatTheme } from './theme';
-import { stringify } from 'node:querystring';
+import { LoadingScreen, ErrorScreen } from './components/Screen';
 
 
 function App() {
@@ -32,19 +31,54 @@ function App() {
   // const [activeId, setActiveId] = useState<string>();
   const [loading, setLoading] = useState(false);     
 
-  const handleNewMessage = async (message: string) => {
+  const [config, setConfig] = useState<{ apiUrl: string } | null>(null);
+
+  // Load app config .... 
+  const [configLoading, setConfigLoading] = useState(true);
+
+
+  useEffect(() => {
+    // Dynamically resolve config.json path based on deployment location
+    const basePath = window.location.origin + window.location.pathname;
+    const configUrl = new URL('config.json', basePath).href;
+    fetch(configUrl)
+      .then(response => {
+        if (!response.ok) throw new Error('Failed to load config');
+        return response.json();
+      })
+      .then(data => {
+        // Validate configuration structure
+        if (!data.apiUrl) {
+          throw new Error('Invalid config: Missing apiUrl');
+        }
+        setConfig(data);
+        setConfigLoading(false);
+      })
+      .catch(error => {
+        console.error('Error loading config:', error);
+        setConfigLoading(false);
+      });
+  }, []);
+
+  if (configLoading) {
+    return (<LoadingScreen/>);
+  }
+
+  if (!config) {
+    return (<ErrorScreen/>)
+  }
+
+
+
+  const handleNewMessage = async (message: string) => {    
     setLoading(true);
 
-    // const source: ConversationSource = {
-    //   title: "source abc"
-    // }
     const newMessage: ConversationExt = {    
         id: 'error',    
         question: message,        
         createdAt: new Date(),
         updatedAt: new Date(),
-        kg: null ,
-        // sources: [source]    
+        kg: null , 
       };
     try {
       const curr = sessions.find(s => s.id === activeId);
@@ -57,7 +91,7 @@ function App() {
       };
       setSessions([...sessions.filter((s) => s.id !== activeId), updated]);
 
-      const data = await sendChatMessage(message, curr.conversations.map(convo => [convo.question, convo.response]));
+      const data = await sendChatMessage(message, curr.conversations.map(convo => [convo.question, convo.response]), config.apiUrl);
       const output = data.output.output;
 
       const accession_ids = findDbGaPIds(output);

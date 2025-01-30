@@ -1,35 +1,19 @@
-# Stage 1: Build the React app
-FROM node:18-alpine as build
-
+FROM node:18-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
+ARG PUBLIC_URL=__PUBLIC_URL_PLACEHOLDER__
+ENV PUBLIC_URL=${PUBLIC_URL}
 RUN npm run build
 
-# Stage 2: Serve the app using Nginx as non-root
 FROM nginx:alpine
+COPY --from=builder --chown=nginx:nginx /app/build /usr/share/nginx/html
+COPY docker/startup.sh /docker-entrypoint.d/
+COPY docker/nginx.conf.template /etc/nginx/conf.d/
 
-# Switch to non-root user and adjust permissions
-RUN apk add --no-cache shadow && \
-    usermod -u 1001 nginx && \
-    groupmod -g 1001 nginx && \
-    mkdir -p /var/run/nginx && \
-    chown -R nginx:nginx /usr/share/nginx/html && \
-    chown -R nginx:nginx /var/cache/nginx && \
-    chown -R nginx:nginx /var/run/nginx
-
-# Remove default nginx website
-RUN rm -rf /usr/share/nginx/html/*
-
-# Copy built assets from build stage
-COPY --from=build /app/build /usr/share/nginx/html
-
-# Copy nginx configuration file
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Switch to non-root user
-# USER nginx
+RUN chmod -R 755 /usr/share/nginx/html && \
+    chmod +x /docker-entrypoint.d/startup.sh
 
 EXPOSE 8080
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["sh", "-c", "/docker-entrypoint.d/startup.sh"]
