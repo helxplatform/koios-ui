@@ -12,7 +12,7 @@ export const useSessions = () => {
     const newId = count.toString();
     setSessions(prev => [...prev, {
       id: newId,
-      title: `Session #${newId}`,
+      title: `Chat ${newId}`,
       createdAt: new Date(),
       updatedAt: new Date(),
       conversations: []

@@ -132,25 +132,27 @@ function App() {
         onSendMessage={handleNewMessage}
         theme={chatTheme}
       >
-        <SessionsList>
-            <div className="flex gap-2 p-2">
-              <NewSessionButton/>
+     <SessionsList>
+      <div className="flex flex-col gap-2 p-2">  {/* Changed to column layout */}
+            <NewSessionButton
+              newSessionText="New Chat"
+             />
+            {activeId &&
               <button
-                disabled={!activeId}
                 onClick={handleDownloadSession}                
                 className="whitespace-no-wrap select-none items-center justify-center font-sans font-semibold disabled:cursor-not-allowed data-[variant=filled]:disabled:bg-gray-600 disabled:text-gray-400 flex w-full light:text-gray-100 border-primary text-base px-4 py-2 leading-[normal] m-0 relative mb-4 rounded-[10px] text-white bg-[#1a568c] hover:bg-[#41ABF5] transition-colors"
               >
-                Export Chat
-              </button>
-            </div>
-            <SessionGroups />
-          </SessionsList>
+               Export Chat
+          </button>}
+          </div>
+        <SessionGroups />
+      </SessionsList> 
         <SessionMessagePanel>
           <SessionMessagesHeader />
           <SessionMessages newSessionContent={
             <div className="flex flex-col gap-2 items-center justify-center h-full">                
                 <p className="text-gray-500 max-w-[400px] text-center">
-                  Please create a session to begin chatting.
+                  Please use "+ New Chat" button to start a new Chat.
                 </p>
               </div>
             }>
@@ -161,7 +163,8 @@ function App() {
                 />
               ))}
           </SessionMessages>
-          <ChatInput />
+          {activeId && <ChatInput            
+          placeholder='"What studies are available on asthma and COPD?" '/>}
         </SessionMessagePanel>        
       </Chat>      
     </div>
