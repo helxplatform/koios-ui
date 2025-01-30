@@ -1,5 +1,5 @@
 import { useGraphResize } from "../hooks/useGraphResize";
-import { ForceGraph3D } from "react-force-graph";
+import { ForceGraph3D, ForceGraph2D } from "react-force-graph";
 import { FC, useEffect, useRef, useState, useMemo } from 'react';
 
 interface Props {
@@ -24,6 +24,7 @@ export const GraphVisualization: FC<Props> = ({ kg, id }) => {
     const [linkTypes, setLinkTypes] = useState<LinkType[]>([]);
     const [selectedNodeTypes, setSelectedNodeTypes] = useState<Set<string>>(new Set());
     const [selectedLinkTypes, setSelectedLinkTypes] = useState<Set<string>>(new Set());
+    const [is3D, setIs3D] = useState(true);
 
     // Extract available types when kg changes
     useEffect(() => {
@@ -90,37 +91,7 @@ export const GraphVisualization: FC<Props> = ({ kg, id }) => {
         setSelectedNodeTypes(new Set(nodeCategories.keys()));
         setSelectedLinkTypes(new Set(linkPredicates.keys()));
     }, [kg]);
-
-    // useEffect(() => {
-    //     if (!kg) return;
-
-    //     // Extract unique node categories with their colors
-    //     const nodeCategories = kg.nodes.reduce((acc: Map<string, string>, node: any) => {
-    //         if (!acc.has(node.category)) {
-    //             acc.set(node.category, node.node_color);
-    //         }
-    //         return acc;
-    //     }, new Map<string, string>());
-
-    //     const newNodeTypes = Array.from(nodeCategories.entries() as IterableIterator<[string, string]>)
-    //         .map(([category, color]) => ({ category, color } as NodeType));
-
-    //     // Extract unique link predicates with their colors
-    //     const linkPredicates = kg.links.reduce((acc: Map<string, string>, link: any) => {
-    //         if (!acc.has(link.predicate)) {
-    //             acc.set(link.predicate, link.edge_color);
-    //         }
-    //         return acc;
-    //     }, new Map<string, string>());
-
-    //     const newLinkTypes = Array.from(linkPredicates.entries() as IterableIterator<[string, string]>)
-    //         .map(([predicate, color]) => ({ predicate, color } as LinkType));
-
-    //     setNodeTypes(newNodeTypes);
-    //     setLinkTypes(newLinkTypes);
-    //     setSelectedNodeTypes(new Set(nodeCategories.keys()));
-    //     setSelectedLinkTypes(new Set(linkPredicates.keys()));
-    // }, [kg]);
+  
 
     const filteredGraphData = useMemo(() => {
         if (!kg) return { nodes: [], links: [] };
@@ -205,14 +176,14 @@ export const GraphVisualization: FC<Props> = ({ kg, id }) => {
     return (
         <div 
             ref={containerRef}
-            className="h-full w-full border-2 border-gray-200 rounded-lg bg-white p-4 flex flex-col"
+            className="h-full w-full border-2 border-gray-200 rounded-lg bg-white p-4 flex flex-col relative"
         >
             {/* Graph Visualization (unchanged) */}
              {/* Graph Visualization */}
              <div className="flex-1">
                 {dimensions.width > 0 && dimensions.height > 0 && (
-                    <ForceGraph3D 
-                        
+                    is3D ? (
+                    <ForceGraph3D
                         width={dimensions.width}
                         height={dimensions.height}
                         graphData={filteredGraphData}
@@ -220,13 +191,27 @@ export const GraphVisualization: FC<Props> = ({ kg, id }) => {
                         nodeRelSize={6}
                         linkWidth={2}
                         nodeLabel="name"
+                        linkLabel="predicate"
                         nodeAutoColorBy={d => d.node_color.rgb}
                         linkAutoColorBy={d => d.edge_color.rgb}
                     />
+                    ) : (
+                    <ForceGraph2D
+                        width={dimensions.width}
+                        height={dimensions.height}
+                        graphData={filteredGraphData}
+                        backgroundColor="#ffffff"
+                        nodeRelSize={6}
+                        linkWidth={2}
+                        nodeLabel="name"
+                        linkLabel="predicate"
+                        nodeAutoColorBy={d => d.node_color.rgb}
+                        linkAutoColorBy={d => d.edge_color.rgb}
+                    />
+                    )
                 )}
             </div>
-
-            {/* Updated Filters Section */}
+            
              {/* Updated Filters Section */}
              <div className="flex flex-row gap-4 mb-4">
                 <div className="space-y-2">
@@ -278,6 +263,35 @@ export const GraphVisualization: FC<Props> = ({ kg, id }) => {
                     </div>
                 </div>
             </div>
+
+
+            {/* 3D Toggle */}
+            {/* 3D Toggle */}
+            <div className="absolute right-4 top-4 z-10"> 
+                <div className="flex gap-1 rounded-lg bg-white shadow-lg border border-gray-200 p-1">
+                    <button
+                    onClick={() => setIs3D(false)}
+                    className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                        !is3D 
+                        ? 'bg-blue-500 text-white hover:bg-blue-600' 
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                    >
+                    2D
+                    </button>
+                    <button
+                    onClick={() => setIs3D(true)}
+                    className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                        is3D 
+                        ? 'bg-blue-500 text-white hover:bg-blue-600' 
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                    >
+                    3D
+                    </button>
+                </div>
+            </div>
+        
         </div>
     );
 };

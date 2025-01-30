@@ -42,14 +42,14 @@ export const processKnowledgeGraph = (kg: any): KnowledgeGraphData | null => {
       links: kg.edges?.map((edge: any) => ({
         source: edge.subject,
         target: edge.object,
-        predicate: edge.predicate,
+        predicate: edge.predicate? edge.predicate.replace("biolink:", "") : "",
         edge_color: stringToColor(edge.predicate)
       })) || [],
       nodes: kg.nodes?.map((node: any) => ({
         id: node.id,
         name: node.name,
         description: node.description,
-        category: node.category?.length ? node.category[0] : "biolink:NamedThing",
+        category: (node.category?.length ? node.category[0] : "biolink:NamedThing").replace("biolink:", ""),
         node_color: stringToColor(node.category?.length ? node.category[0] : "biolink:NamedThing")
       })) || []
     };
