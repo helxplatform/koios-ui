@@ -1,4 +1,3 @@
-// api.service.ts 
 export const sendChatMessage = async (
   message: string,
   chatHistory: string[],
@@ -10,13 +9,13 @@ export const sendChatMessage = async (
       .filter(msg => msg && typeof msg === 'string')
       .map(msg => {
         let cleaned = msg.replace(/```[\s\S]*?```/g, '');
- 
         cleaned = cleaned.replace(/<[^>]*>/g, '');
         cleaned = cleaned.replace(/\{[^}]*\}/g, '');
         cleaned = cleaned.replace(/\*\*(.*?)\*\*/g, '$1'); // Bold
         cleaned = cleaned.replace(/\*(.*?)\*/g, '$1');     // Italic
         cleaned = cleaned.replace(/\[(.*?)\]\((.*?)\)/g, '$1'); // Links
-        cleaned = cleaned.trim().replace(/\s+/g, ' ');     
+        cleaned = cleaned.trim().replace(/\s+/g, ' ');
+        
         return cleaned;
       })
       .filter(msg => msg.trim()); // Remove empty messages
@@ -63,10 +62,18 @@ export const sendChatMessage = async (
     console.log('API Response:', data);
     
     let aiContent = '';
-    if (data.input && Array.isArray(data.input)) {
+    
+    // Handle the new LangServe response format
+    if (data.output && data.output.input && Array.isArray(data.output.input)) {
+      const aiMessage = data.output.input.find(msg => 
+        msg.type === 'ai' && msg.content && typeof msg.content === 'string'
+      );
+      aiContent = aiMessage?.content || "No response received";
+    } else if (data.input && Array.isArray(data.input)) {
+      // Keep backward compatibility with the old format
       const aiMessage = data.input.find(msg => 
-        (msg.type === 'ai' || (msg.type === 'human' && msg.name !== 'user')) && 
-        msg.content && 
+        (msg.type === 'ai' || (msg.type === 'human' && msg.name !== 'user')) &&
+        msg.content &&
         typeof msg.content === 'string'
       );
       aiContent = aiMessage?.content || "No response received";
@@ -78,7 +85,7 @@ export const sendChatMessage = async (
       output: {
         output: aiContent,
         extra: {
-          knowledge_graph: data.extra?.knowledge_graph || null
+          knowledge_graph: data.output?.extra?.knowledge_graph || data.extra?.knowledge_graph || null
         }
       }
     };
