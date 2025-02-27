@@ -157,8 +157,8 @@ function App() {
                 />
               ))}
           </SessionMessages>
-           <ChatInput            
-          placeholder='"What studies are available on asthma and COPD?" '/>
+          {activeId && <ChatInput            
+          placeholder='"What studies are available on asthma and COPD?" '/>}
         </SessionMessagePanel>        
       </Chat>      
     </div>
