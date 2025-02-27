@@ -10,12 +10,7 @@ export const sendChatMessage = async (message: string, chatHistory: any[], apiUr
       },
       body: JSON.stringify({
         input: {
-          input: [{
-            content: message,
-            type: "human",
-            name: "user",
-            id: `msg_${Date.now()}`
-          }],
+          input: message,            
           next: "start",
           chat_history: chatHistory,
           extra: {}
