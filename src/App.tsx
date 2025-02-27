@@ -92,7 +92,7 @@ function App() {
       setSessions([...sessions.filter((s) => s.id !== activeId), updated]);
 
       const data = await sendChatMessage(message, curr.conversations.map(convo => [convo.question, convo.response]), config.apiUrl);
-      const output = data.output.output;
+      const output = data.output?.output?.content;
 
       const accession_ids = findDbGaPIds(output);
       
@@ -149,13 +149,7 @@ function App() {
       </SessionsList> 
         <SessionMessagePanel>
           <SessionMessagesHeader />
-          <SessionMessages newSessionContent={
-            <div className="flex flex-col gap-2 items-center justify-center h-full">                
-                <p className="text-gray-500 max-w-[400px] text-center">
-                  Please use "+ New Chat" button to start a new Chat.
-                </p>
-              </div>
-            }>
+          <SessionMessages>
               {conversations => conversations.map((conversation) => (
                 <SessionMessageCustom 
                   key={conversation.id} 
@@ -163,8 +157,8 @@ function App() {
                 />
               ))}
           </SessionMessages>
-          {activeId && <ChatInput            
-          placeholder='"What studies are available on asthma and COPD?" '/>}
+           <ChatInput            
+          placeholder='"What studies are available on asthma and COPD?" '/>
         </SessionMessagePanel>        
       </Chat>      
     </div>
