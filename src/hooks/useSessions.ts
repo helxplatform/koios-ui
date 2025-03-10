@@ -4,9 +4,16 @@ import { Session_ext } from '../types/types';
 import { useState } from 'react';
 
 export const useSessions = () => {
-  const [sessions, setSessions] = useState<Session_ext[]>([]);
-  const [activeId, setActiveId] = useState<string>();
-  const [count, setCount] = useState(1);
+  const initialSession: Session_ext = {
+    id: '1',
+    title: 'Chat 1',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    conversations: [],
+  };
+  const [sessions, setSessions] = useState<Session_ext[]>([initialSession]);
+  const [activeId, setActiveId] = useState<string>(initialSession.id);
+  const [count, setCount] = useState(2);
 
   const handleNewSession = () => {
     const newId = count.toString();

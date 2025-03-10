@@ -5,13 +5,24 @@ export const sendChatMessage = async (message: string, chatHistory: any[], apiUr
 
     const response = await fetch(apiUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({
         input: {
           input: message,            
+          next: "start",
           chat_history: chatHistory,
-        },          
-        config: {},
+          extra: {}
+        },
+        config: {
+          configurable: {
+            checkpoint_id: "",
+            checkpoint_ns: "",
+            // @TODO check if this could tied with the session (?)
+            thread_id: `thread_${Date.now()}`
+          }
+        },
         kwargs: {}
       })
     });
