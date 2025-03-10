@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './App.css';
 // import Placeholder from 'react-bootstrap/Placeholder';
 
@@ -14,14 +14,16 @@ import { findDbGaPIds } from './utils/formatting.util';
 import {
   Chat,
   ChatInput,
-  NewSessionButton,
   SessionGroups,
+  SessionsGroup,
+  SessionListItem,
   SessionMessagePanel,
   SessionMessages,
   SessionMessagesHeader,
   SessionsList,
   ConversationSource
 } from 'reachat';
+import { InterceptedNewSessionButton } from './components/InterceptedNewSessionButton';
 import { chatTheme } from './theme';
 import { LoadingScreen, ErrorScreen } from './components/Screen';
 
@@ -35,7 +37,7 @@ function App() {
 
   // Load app config .... 
   const [configLoading, setConfigLoading] = useState(true);
-
+  const hasInitialized = useRef(false);
 
   useEffect(() => {
     // Dynamically resolve config.json path based on deployment location
@@ -58,6 +60,13 @@ function App() {
         console.error('Error loading config:', error);
         setConfigLoading(false);
       });
+  }, []);
+
+  useEffect(() => {
+    if (!hasInitialized.current) {
+      handleNewSession()
+      hasInitialized.current = true;
+    }
   }, []);
 
   if (configLoading) {
@@ -89,6 +98,12 @@ function App() {
         ...curr,
         conversations: [...curr.conversations, newMessage],
       };
+
+      // gather chat title from first message
+      if (updated.conversations.length === 1) {
+        updated.title = message.length > 30 ? message.substring(0, 30) + '...' : message;
+      }
+
       setSessions([...sessions.filter((s) => s.id !== activeId), updated]);
 
       const data = await sendChatMessage(message, curr.conversations.map(convo => [convo.question, convo.response]), config.apiUrl);
@@ -108,6 +123,7 @@ function App() {
       newMessage.kg = processedKg;
       newMessage.response = output;
       newMessage.sources = sources;
+
       setSessions([...sessions.filter((s) => s.id !== activeId), updated]);
       setLoading(false);      
 
@@ -134,9 +150,11 @@ function App() {
       >
      <SessionsList>
       <div className="flex flex-col gap-2 p-2">  {/* Changed to column layout */}
-            <NewSessionButton
-              newSessionText="New Chat"
-             />
+            {/* this can be replaced with the regular session button if we dont want confirmation on new chat */}
+            <InterceptedNewSessionButton 
+              newSessionText="New Chat" 
+              confirmationMessage="Are you sure you want to start a new chat?"
+            />
             {activeId &&
               <button
                 onClick={handleDownloadSession}                
@@ -145,7 +163,17 @@ function App() {
                Export Chat
           </button>}
           </div>
-        <SessionGroups />
+          <SessionGroups>
+            {(groups) =>
+              groups.map(({ heading, sessions }) => (
+                <SessionsGroup heading={heading} key={heading}>
+                  {sessions.map((s) => (
+                    <SessionListItem key={s.id} session={s} />
+                  ))}
+                </SessionsGroup>
+              ))
+            }
+          </SessionGroups>
       </SessionsList> 
         <SessionMessagePanel>
           <SessionMessagesHeader />
