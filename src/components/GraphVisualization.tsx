@@ -3,6 +3,8 @@ import { ForceGraph3D, ForceGraph2D } from "react-force-graph";
 import { FC, useEffect, useRef, useState, useMemo } from 'react';
 import ReactDOMServer from 'react-dom/server';
 import { link } from "fs";
+import LabelTypeTooltip from "./LabelTypeTooltip";
+
 interface Props {
   kg: any;
   id: string;
@@ -11,11 +13,13 @@ interface Props {
 interface NodeType {
   category: string;
   color: string;
+  count?: number;
 }
 
 interface LinkType {
   predicate: string;
   color: string;
+  count?: number;
 }
 
 export const GraphVisualization: FC<Props> = ({ kg, id }) => {
@@ -34,7 +38,8 @@ export const GraphVisualization: FC<Props> = ({ kg, id }) => {
         // Calculate dominant colors for node categories
         const nodeColorCounts = kg.nodes.reduce((acc: Map<string, Map<string, number>>, node: any) => {
             const category = node.category;
-            const color = node.node_color.hex;
+            const color = node.color;
+            
             if (!acc.has(category)) {
                 acc.set(category, new Map());
             }
@@ -42,7 +47,13 @@ export const GraphVisualization: FC<Props> = ({ kg, id }) => {
             colorMap.set(color, (colorMap.get(color) || 0) + 1);
             return acc;
         }, new Map<string, Map<string, number>>());
-    
+
+        const nodeCategoryCounts = new Map<string, number>();
+        kg.nodes.forEach((node: any) => {
+            const category = node.category;
+            nodeCategoryCounts.set(category, (nodeCategoryCounts.get(category) || 0) + 1);
+        });
+
         const nodeCategories = new Map<string, string>();
         nodeColorCounts.forEach((colorMap, category) => {
             let maxCount = -1;
@@ -55,14 +66,21 @@ export const GraphVisualization: FC<Props> = ({ kg, id }) => {
             });
             nodeCategories.set(category, dominantColor);
         });
+
     
         const newNodeTypes = Array.from(nodeCategories.entries())
-            .map(([category, color]) => ({ category, color } as NodeType));
+            .map(([
+                category, color]) => ({ 
+                    category, 
+                    color, 
+                    count: nodeCategoryCounts.get(category) || 0
+                } as NodeType));
     
         // Calculate dominant colors for link predicates
         const linkColorCounts = kg.links.reduce((acc: Map<string, Map<string, number>>, link: any) => {
             const predicate = link.predicate;
             const color = link.edge_color.hex;
+
             if (!acc.has(predicate)) {
                 acc.set(predicate, new Map());
             }
@@ -71,6 +89,12 @@ export const GraphVisualization: FC<Props> = ({ kg, id }) => {
             return acc;
         }, new Map<string, Map<string, number>>());
     
+        const linkCategoryCounts = new Map<string, number>();
+        kg.links.forEach((link: any) => {
+            const predicate = link.predicate;
+            linkCategoryCounts.set(predicate, (linkCategoryCounts.get(predicate) || 0) + 1);
+        });
+
         const linkPredicates = new Map<string, string>();
         linkColorCounts.forEach((colorMap, predicate) => {
             let maxCount = -1;
@@ -85,7 +109,11 @@ export const GraphVisualization: FC<Props> = ({ kg, id }) => {
         });
     
         const newLinkTypes = Array.from(linkPredicates.entries())
-            .map(([predicate, color]) => ({ predicate, color } as LinkType));
+            .map(([predicate, color]) => ({ 
+                predicate, 
+                color,
+                count: linkCategoryCounts.get(predicate) || 0
+            } as LinkType));
     
         setNodeTypes(newNodeTypes);
         setLinkTypes(newLinkTypes);
@@ -207,6 +235,28 @@ export const GraphVisualization: FC<Props> = ({ kg, id }) => {
         return ReactDOMServer.renderToString(<LinkLabel link={d} />);
     }
 
+    const getContrastColor = (backgroundColor) => {
+        // Remove # if present
+        const hex = backgroundColor.replace('#', '');
+        
+        // Convert hex to RGB
+        const r = parseInt(hex.substr(0, 2), 16) / 255;
+        const g = parseInt(hex.substr(2, 2), 16) / 255;
+        const b = parseInt(hex.substr(4, 2), 16) / 255;
+        
+        // Calculate relative luminance using the WCAG formula
+        // L = 0.2126 * R + 0.7152 * G + 0.0722 * B
+        const linearize = (v) => {
+          return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+        };
+        
+        const luminance = 0.2126 * linearize(r) + 0.7152 * linearize(g) + 0.0722 * linearize(b);
+        
+        // Determine text color based on luminance
+        // Using 0.5 as a threshold (WCAG recommends 0.55 for better contrast)
+        return luminance > 0.5 ? "black" : "white";
+      };
+
     return (
         <div 
             ref={containerRef}
@@ -249,17 +299,20 @@ export const GraphVisualization: FC<Props> = ({ kg, id }) => {
              {/* Updated Filters Section */}
              <div className="flex flex-row gap-4 mb-4">
                 <div className="space-y-2">
-                    <h3 className="text-sm font-semibold text-gray-600">Node Filters</h3>
+                    <h3 className="text-sm font-semibold text-gray-600 flex">
+                        Node Filters
+                        <LabelTypeTooltip text="Filter nodes by category. Click on a node category to disable and enable. Each number associated with a category denotes the number of times it is seen in the graph" />
+                    </h3>
                     <div className="flex flex-wrap gap-2">
                         {nodeTypes.map(type => (
                             <button 
-
                                 key={type.category + id}
                                 onClick={() => toggleNodeType(type.category)}
                                 style={{ 
                                     backgroundColor: selectedNodeTypes.has(type.category) 
                                         ? type.color 
-                                        : '#f3f4f6' 
+                                        : '#f3f4f6',
+                                    color: getContrastColor(selectedNodeTypes.has(type.category) ? type.color : '#f3f4f6')
                                 }}
                                 className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
                                     selectedNodeTypes.has(type.category) 
@@ -267,14 +320,17 @@ export const GraphVisualization: FC<Props> = ({ kg, id }) => {
                                         : 'text-gray-600 hover:bg-gray-200'
                                 }`}
                             >
-                                {type.category}
+                                {type.category} {type.count && `(${type.count})`}
                             </button>
                         ))}
                     </div>
                 </div>
 
                 <div className="space-y-2">
-                    <h3 className="text-sm font-semibold text-gray-600">Link Filters</h3>
+                    <h3 className="text-sm font-semibold text-gray-600 flex">
+                        Link Filters
+                        <LabelTypeTooltip text="Filter links by predicate. Click on a link predicate to disable and enable. Each number associated with a predicate denotes the number of times it is seen in the graph" />
+                    </h3>
                     <div className="flex flex-wrap gap-2">
                         {linkTypes.map(type => (
                             <button
@@ -282,8 +338,9 @@ export const GraphVisualization: FC<Props> = ({ kg, id }) => {
                                 onClick={() => toggleLinkType(type.predicate)}
                                 style={{ 
                                     backgroundColor: selectedLinkTypes.has(type.predicate) 
-                                        ? type.color 
-                                        : '#f3f4f6' 
+                                        ? type.color
+                                        : '#f3f4f6',
+                                    color: getContrastColor(selectedLinkTypes.has(type.predicate) ? type.color : '#f3f4f6')
                                 }}
                                 className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
                                     selectedLinkTypes.has(type.predicate) 
@@ -291,7 +348,7 @@ export const GraphVisualization: FC<Props> = ({ kg, id }) => {
                                         : 'text-gray-600 hover:bg-gray-200'
                                 }`}
                             >
-                                {type.predicate}
+                                {type.predicate} {type.count && `(${type.count})`}
                             </button>
                         ))}
                     </div>
