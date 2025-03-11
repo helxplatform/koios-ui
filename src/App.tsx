@@ -30,7 +30,6 @@ import { LoadingScreen, ErrorScreen } from './components/Screen';
 function App() {
   const { sessions, setSessions, handleNewSession, handleDelete, activeId, setActiveId, handleDownloadSession} = useSessions();
 
-  // const [activeId, setActiveId] = useState<string>();
   const [loading, setLoading] = useState(false);     
   const [config, setConfig] = useState<{ apiUrl: string } | null>(null);
 
@@ -63,7 +62,10 @@ function App() {
 
   useEffect(() => {
     if (!hasInitialized.current) {
-      handleNewSession()
+      // Only create a new session if no sessions exist
+      if (sessions.length === 0) {
+        handleNewSession();
+      }
       hasInitialized.current = true;
     }
   }, []);
@@ -155,8 +157,8 @@ function App() {
         onSendMessage={handleNewMessage}
         theme={chatTheme}
       >
-     <SessionsList>
-      <div className="flex flex-col gap-2 p-2">  {/* Changed to column layout */}
+      <SessionsList>
+          <div className="flex flex-col p-2">  {/* Changed to column layout */}
             {/* this can be replaced with the regular session button if we dont want confirmation on new chat */}
             <InterceptedNewSessionButton 
               newSessionText="New Chat" 
@@ -164,12 +166,14 @@ function App() {
             />
             {activeId &&
               <button
+                disabled={!activeId}
                 onClick={handleDownloadSession}                
                 className="whitespace-no-wrap select-none items-center justify-center font-sans font-semibold disabled:cursor-not-allowed data-[variant=filled]:disabled:bg-gray-600 disabled:text-gray-400 flex w-full light:text-gray-100 border-primary text-base px-4 py-2 leading-[normal] m-0 relative mb-4 rounded-[10px] text-white bg-[#1a568c] hover:bg-[#41ABF5] transition-colors"
               >
-               Export Chat
-          </button>}
+                Export Chat
+            </button>}
           </div>
+
           <SessionGroups>
             {(groups) =>
               groups.map(({ heading, sessions }) => (
@@ -185,7 +189,8 @@ function App() {
               ))
             }
           </SessionGroups>
-      </SessionsList> 
+        </SessionsList>
+
         <SessionMessagePanel>
           <SessionMessagesHeader />
           <SessionMessages>
@@ -201,6 +206,7 @@ function App() {
         </SessionMessagePanel>        
       </Chat>      
     </div>
+
     <Footer />
    </div>
   );
