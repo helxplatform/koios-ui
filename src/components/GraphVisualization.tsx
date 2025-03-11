@@ -34,80 +34,69 @@ export const GraphVisualization: FC<Props> = ({ kg, id }) => {
     // Extract available types when kg changes
     useEffect(() => {
         if (!kg) return;
-    
-        // Calculate dominant colors for node categories
-        const nodeColorCounts = kg.nodes.reduce((acc: Map<string, Map<string, number>>, node: any) => {
-            const category = node.category;
-            const color = node.color;
-            
-            if (!acc.has(category)) {
-                acc.set(category, new Map());
-            }
-            const colorMap = acc.get(category)!;
-            colorMap.set(color, (colorMap.get(color) || 0) + 1);
-            return acc;
-        }, new Map<string, Map<string, number>>());
 
+        // NODES
+        const nodeColors = [
+            '#1a568c',
+            '#19961e',
+            '#03A9F4',
+            '#FF9800',
+            '#9C27B0',
+            '#F44336' 
+        ];
+
+        const nodeCategories = new Map<string, string>();
         const nodeCategoryCounts = new Map<string, number>();
+        
+        let nodeColorIndex = 0;
         kg.nodes.forEach((node: any) => {
             const category = node.category;
             nodeCategoryCounts.set(category, (nodeCategoryCounts.get(category) || 0) + 1);
-        });
-
-        const nodeCategories = new Map<string, string>();
-        nodeColorCounts.forEach((colorMap, category) => {
-            let maxCount = -1;
-            let dominantColor = '';
-            colorMap.forEach((count, color) => {
-                if (count > maxCount) {
-                    maxCount = count;
-                    dominantColor = color;
-                }
-            });
-            nodeCategories.set(category, dominantColor);
-        });
-
-    
-        const newNodeTypes = Array.from(nodeCategories.entries())
-            .map(([
-                category, color]) => ({ 
-                    category, 
-                    color, 
-                    count: nodeCategoryCounts.get(category) || 0
-                } as NodeType));
-    
-        // Calculate dominant colors for link predicates
-        const linkColorCounts = kg.links.reduce((acc: Map<string, Map<string, number>>, link: any) => {
-            const predicate = link.predicate;
-            const color = link.edge_color.hex;
-
-            if (!acc.has(predicate)) {
-                acc.set(predicate, new Map());
+            
+            if (!nodeCategories.has(category)) {
+                const color = nodeColors[nodeColorIndex % nodeColors.length];
+                nodeCategories.set(category, color);
+                nodeColorIndex++;
             }
-            const colorMap = acc.get(predicate)!;
-            colorMap.set(color, (colorMap.get(color) || 0) + 1);
-            return acc;
-        }, new Map<string, Map<string, number>>());
-    
+            
+            node.color = nodeCategories.get(category);
+        });
+
+        const newNodeTypes = Array.from(nodeCategories.entries())
+            .map(([category, color]) => ({ 
+                category, 
+                color, 
+                count: nodeCategoryCounts.get(category) || 0
+            } as NodeType));
+
+
+        // LINKS
+        const linkColors = [
+            '#E91E63',
+            '#9C27B0',
+            '#FF9800',
+            '#FFEB3B',
+            '#8BC34A',
+            '#00BCD4' 
+        ];
+
+        const linkPredicates = new Map<string, string>();
         const linkCategoryCounts = new Map<string, number>();
+
+        let linkColorIndex = 0;
         kg.links.forEach((link: any) => {
             const predicate = link.predicate;
             linkCategoryCounts.set(predicate, (linkCategoryCounts.get(predicate) || 0) + 1);
+        
+            if (!linkPredicates.has(predicate)) {
+                const color = linkColors[linkColorIndex % linkColors.length];
+                linkPredicates.set(predicate, color);
+                linkColorIndex++;
+            }
+            
+            link.color = linkPredicates.get(predicate);
         });
 
-        const linkPredicates = new Map<string, string>();
-        linkColorCounts.forEach((colorMap, predicate) => {
-            let maxCount = -1;
-            let dominantColor = '';
-            colorMap.forEach((count, color) => {
-                if (count > maxCount) {
-                    maxCount = count;
-                    dominantColor = color;
-                }
-            });
-            linkPredicates.set(predicate, dominantColor);
-        });
-    
         const newLinkTypes = Array.from(linkPredicates.entries())
             .map(([predicate, color]) => ({ 
                 predicate, 
@@ -276,8 +265,6 @@ export const GraphVisualization: FC<Props> = ({ kg, id }) => {
                         linkWidth={2}
                         nodeLabel={nodeLabel}
                         linkLabel={linkLabel}
-                        nodeAutoColorBy={d => d.node_color.rgb}
-                        linkAutoColorBy={d => d.edge_color.rgb}
                     />
                     ) : (
                     <ForceGraph2D
@@ -289,8 +276,6 @@ export const GraphVisualization: FC<Props> = ({ kg, id }) => {
                         linkWidth={2}
                         nodeLabel={nodeLabel}
                         linkLabel={linkLabel}
-                        nodeAutoColorBy={d => d.node_color.rgb}
-                        linkAutoColorBy={d => d.edge_color.rgb}
                     />
                     )
                 )}
