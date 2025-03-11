@@ -1,7 +1,8 @@
 import { useGraphResize } from "../hooks/useGraphResize";
 import { ForceGraph3D, ForceGraph2D } from "react-force-graph";
 import { FC, useEffect, useRef, useState, useMemo } from 'react';
-
+import ReactDOMServer from 'react-dom/server';
+import { link } from "fs";
 interface Props {
   kg: any;
   id: string;
@@ -173,6 +174,39 @@ export const GraphVisualization: FC<Props> = ({ kg, id }) => {
         setSelectedLinkTypes(newSelected);
     };
 
+    const generateDescription = (description) => {
+        return description ? (description.length > 300 ? description.toLowerCase().slice(0, 300) + '...' : description.toLowerCase()) : ''
+    }
+
+    // Define a React component for your node label
+    const NodeLabel = ({ node }) => (
+        <div>
+        <strong>{node.name}</strong>
+        <div>{generateDescription(node.description)}</div>
+        </div>
+    );
+    
+    // Convert the React component to an HTML string
+    const nodeLabel = (d) => {
+        return ReactDOMServer.renderToString(<NodeLabel node={d} />);
+    };
+
+    const LinkLabel = ({ link }) => (
+        <div>
+        <div><strong>{link.source.name}</strong></div>
+        <div>{generateDescription(link.source.description)}</div>
+        <br />
+        <div><em><strong>is {link.predicate}</strong></em></div>
+        <br />
+        <strong>{link.target.name}</strong>
+        <div>{generateDescription(link.target.description)}</div>
+        </div>
+    ) 
+
+    const linkLabel = (d) => {
+        return ReactDOMServer.renderToString(<LinkLabel link={d} />);
+    }
+
     return (
         <div 
             ref={containerRef}
@@ -190,8 +224,8 @@ export const GraphVisualization: FC<Props> = ({ kg, id }) => {
                         backgroundColor="#ffffff"
                         nodeRelSize={6}
                         linkWidth={2}
-                        nodeLabel="name"
-                        linkLabel="predicate"
+                        nodeLabel={nodeLabel}
+                        linkLabel={linkLabel}
                         nodeAutoColorBy={d => d.node_color.rgb}
                         linkAutoColorBy={d => d.edge_color.rgb}
                     />
@@ -203,8 +237,8 @@ export const GraphVisualization: FC<Props> = ({ kg, id }) => {
                         backgroundColor="#ffffff"
                         nodeRelSize={6}
                         linkWidth={2}
-                        nodeLabel="name"
-                        linkLabel="predicate"
+                        nodeLabel={nodeLabel}
+                        linkLabel={linkLabel}
                         nodeAutoColorBy={d => d.node_color.rgb}
                         linkAutoColorBy={d => d.edge_color.rgb}
                     />
