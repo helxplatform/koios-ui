@@ -21,38 +21,35 @@ export const SessionMessageCustom: FC<Props> = ({ conversation, isLast }) => {
     return (
     <SessionMessage key={conversation.id} conversation={conversation as Conversation} isLast={isLast}>      
       <MessageQuestion
-                      question={conversation.question}
-                      files={conversation.files}
-        />
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-row gap-4 w-full">
-        <div className='flex-1'>
-            {conversation.response === undefined ? (
-            <div className="flex justify-center items-center h-24">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-            </div>
-            ) : (
-            <>
-                <div className="break-words overflow-wrap-anywhere">
-                <MessageResponse response={conversation.response || "No answer can be found"} />
-                </div>
-                <MessageSources sources={conversation.sources || []} />
-            </>
-            )}
-        </div>
-    
-        {conversation.kg && 
+        question={conversation.question}
+        files={conversation.files}
+      />
+      <div className="flex flex-col gap-4 dark:bg-gray-700 py-6 rounded-3xl rounded-tr-none">
+        <div className="flex flex-row gap-4 w-full">
+          <div className='flex-1'>
+              {conversation.response === undefined ? (
+              <div className="flex justify-center items-center h-24">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+              </div>
+              ) : (
+              <>
+                  <div className="break-words overflow-wrap-anywhere">
+                  <MessageResponse response={conversation.response || "No answer can be found"} />
+                  </div>
+                  <MessageSources sources={conversation.sources || []} />
+              </>
+              )}
+          </div>
+      
+          {conversation.kg && 
             <div className="flex-1 min-w-[300px] h-[650px]">
-            <GraphVisualization kg={conversation.kg} id={conversation.id}  
-            />
+              <GraphVisualization kg={conversation.kg} id={conversation.id}  />
             </div>}
-    </div>
-        
+      </div>    
         <MessageActions
             question={conversation.question}
             response={conversation.response}
         />                               
       </div>
-    
     </SessionMessage>);
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useContext } from 'react';
 import './App.css';
 // import Placeholder from 'react-bootstrap/Placeholder';
 
@@ -10,13 +10,13 @@ import { Footer } from './components/Footer';
 import { SessionMessageCustom } from './components/SessionMessage';
 import { ConversationExt } from './types/types';
 import { findDbGaPIds } from './utils/formatting.util';
+import { EditableSessionListItem } from './components/EditableSessionListItem';
 
 import {
   Chat,
   ChatInput,
   SessionGroups,
   SessionsGroup,
-  SessionListItem,
   SessionMessagePanel,
   SessionMessages,
   SessionMessagesHeader,
@@ -27,12 +27,11 @@ import { InterceptedNewSessionButton } from './components/InterceptedNewSessionB
 import { chatTheme } from './theme';
 import { LoadingScreen, ErrorScreen } from './components/Screen';
 
-
 function App() {
   const { sessions, setSessions, handleNewSession, handleDelete, activeId, setActiveId, handleDownloadSession} = useSessions();
+
   // const [activeId, setActiveId] = useState<string>();
   const [loading, setLoading] = useState(false);     
-
   const [config, setConfig] = useState<{ apiUrl: string } | null>(null);
 
   // Load app config .... 
@@ -76,8 +75,6 @@ function App() {
   if (!config) {
     return (<ErrorScreen/>)
   }
-
-
 
   const handleNewMessage = async (message: string) => {    
     setLoading(true);
@@ -133,6 +130,16 @@ function App() {
     }
     setLoading(false);
   };
+
+  const updateSessionTitle = (id: string, newTitle: string) => {
+    const updated = sessions.map((s) => {
+      if (s.id === id) {
+        return { ...s, title: newTitle };
+      }
+      return s;
+    });
+    setSessions(updated);
+  }
  
   return (
     <div className="flex flex-col h-screen">
@@ -168,7 +175,11 @@ function App() {
               groups.map(({ heading, sessions }) => (
                 <SessionsGroup heading={heading} key={heading}>
                   {sessions.map((s) => (
-                    <SessionListItem key={s.id} session={s} />
+                    <EditableSessionListItem 
+                      key={s.id} 
+                      session={s}
+                      onUpdateTitle={(id, newTitle) => { updateSessionTitle(id, newTitle);}}
+                    />
                   ))}
                 </SessionsGroup>
               ))
@@ -192,9 +203,6 @@ function App() {
     </div>
     <Footer />
    </div>
-
-    
-
   );
 }
 
