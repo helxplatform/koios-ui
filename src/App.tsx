@@ -1,16 +1,15 @@
-import { useState, useEffect, useRef, useContext } from 'react';
-import './App.css';
-// import Placeholder from 'react-bootstrap/Placeholder';
+import { useState, useEffect, useRef } from "react";
+import "./App.css";
 
-import { useSessions } from './hooks/useSessions';
-import { sendChatMessage } from './services/api.service';
-import { processKnowledgeGraph } from './utils/graph.utils';
-import { Header } from './components/Header';
-import { Footer } from './components/Footer';
-import { SessionMessageCustom } from './components/SessionMessage';
-import { ConversationExt } from './types/types';
-import { findDbGaPIds } from './utils/formatting.util';
-import { EditableSessionListItem } from './components/EditableSessionListItem';
+import { useSessions } from "./hooks/useSessions";
+import { sendChatMessage } from "./services/api.service";
+import { processKnowledgeGraph } from "./utils/graph.utils";
+import { Header } from "./components/Header";
+import { Footer } from "./components/Footer";
+import { SessionMessageCustom } from "./components/SessionMessage";
+import { ConversationExt } from "./types/types";
+import { findDbGaPIds } from "./utils/formatting.util";
+import { EditableSessionListItem } from "./components/EditableSessionListItem";
 
 import {
   Chat,
@@ -21,41 +20,49 @@ import {
   SessionMessages,
   SessionMessagesHeader,
   SessionsList,
-  ConversationSource
-} from 'reachat';
-import { InterceptedNewSessionButton } from './components/InterceptedNewSessionButton';
-import { chatTheme } from './theme';
-import { LoadingScreen, ErrorScreen } from './components/Screen';
+  ConversationSource,
+} from "reachat";
+import { InterceptedNewSessionButton } from "./components/InterceptedNewSessionButton";
+import { chatTheme } from "./theme";
+import { LoadingScreen, ErrorScreen } from "./components/Screen";
 
 function App() {
-  const { sessions, setSessions, handleNewSession, handleDelete, activeId, setActiveId, handleDownloadSession} = useSessions();
+  const {
+    sessions,
+    setSessions,
+    handleNewSession,
+    handleDelete,
+    activeId,
+    setActiveId,
+    handleDownloadSession,
+  } = useSessions();
 
-  const [loading, setLoading] = useState(false);     
+  const [loading, setLoading] = useState(false);
   const [config, setConfig] = useState<{ apiUrl: string } | null>(null);
 
-  // Load app config .... 
+  // Load app config ....
   const [configLoading, setConfigLoading] = useState(true);
   const hasInitialized = useRef(false);
 
   useEffect(() => {
     // Dynamically resolve config.json path based on deployment location
     const basePath = window.location.origin + window.location.pathname;
-    const configUrl = new URL('config.json', basePath).href;
+    const configUrl = new URL("config.json", basePath).href;
     fetch(configUrl)
-      .then(response => {
-        if (!response.ok) throw new Error('Failed to load config');
+      .then((response) => {
+        if (!response.ok) throw new Error("Failed to load config");
         return response.json();
       })
-      .then(data => {
+      .then((data) => {
         // Validate configuration structure
         if (!data.apiUrl) {
-          throw new Error('Invalid config: Missing apiUrl');
+          throw new Error("Invalid config: Missing apiUrl");
         }
         setConfig(data);
         setConfigLoading(false);
       })
-      .catch(error => {
-        console.error('Error loading config:', error);
+      .catch((error) => {
+        console.error("Error loading config:", error);
         setConfigLoading(false);
       });
   }, []);
@@ -71,28 +78,31 @@ function App() {
   }, []);
 
   if (configLoading) {
-    return (<LoadingScreen/>);
+    return <LoadingScreen />;
   }
 
   if (!config) {
-    return (<ErrorScreen/>)
+    return <ErrorScreen />;
   }
 
-  const handleNewMessage = async (message: string) => {    
+  const handleNewMessage = async (message: string) => {
     setLoading(true);
 
-    const newMessage: ConversationExt = {    
-        id: 'error',    
-        question: message,        
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        kg: null , 
-      };
+    const newMessage: ConversationExt = {
+      id: "error",
+      question: message,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      kg: null,
+    };
     try {
-      const curr = sessions.find(s => s.id === activeId);
-      if (!curr) { setLoading(false);  return; }
-      newMessage.id = curr.id + '-' + curr.conversations.length;
-      
+      const curr = sessions.find((s) => s.id === activeId);
+      if (!curr) {
+        setLoading(false);
+        return;
+      }
+      newMessage.id = curr.id + "-" + curr.conversations.length;
+
       const updated = {
         ...curr,
         conversations: [...curr.conversations, newMessage],
@@ -100,22 +110,31 @@ function App() {
 
       // gather chat title from first message
       if (updated.conversations.length === 1) {
-        updated.title = message.length > 30 ? message.substring(0, 30) + '...' : message;
+        updated.title =
+          message.length > 30 ? message.substring(0, 30) + "..." : message;
       }
 
       setSessions([...sessions.filter((s) => s.id !== activeId), updated]);
 
-      const data = await sendChatMessage(message, curr.conversations.map(convo => [convo.question, convo.response]), config.apiUrl);
+      const data = await sendChatMessage(
+        message,
+        curr.conversations.map((convo) => [convo.question, convo.response]),
+        config.apiUrl
+      );
       const output = data.output?.output?.content;
 
       const accession_ids = findDbGaPIds(output);
-      
-      const sources:ConversationSource[] = accession_ids.phs?.map(study_id => ({
-        id: study_id,
-        url: "https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=" + study_id,
-        title: study_id
-      }))
-      
+
+      const sources: ConversationSource[] = accession_ids.phs?.map(
+        (study_id) => ({
+          id: study_id,
+          url:
+            "https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=" +
+            study_id,
+          title: study_id,
+        })
+      );
+
       const knowledge_graph = data.output?.extra?.knowledge_graph;
       const processedKg = processKnowledgeGraph(knowledge_graph);
 
@@ -124,10 +143,9 @@ function App() {
       newMessage.sources = sources;
 
       setSessions([...sessions.filter((s) => s.id !== activeId), updated]);
-      setLoading(false);      
-
+      setLoading(false);
     } catch (error) {
-      console.error('Error:', error);
+      console.error("Error:", error);
       newMessage.response = "An error occured!";
     }
     setLoading(false);
@@ -141,74 +159,83 @@ function App() {
       return s;
     });
     setSessions(updated);
-  }
- 
+  };
+
   return (
     <div className="flex flex-col h-screen">
-    <Header/>
-    <div className="flex-1 p-2 main-container">
-      <Chat
-        sessions={sessions}
-        activeSessionId={activeId}
-        isLoading={loading}
-        onNewSession={handleNewSession}
-        onSelectSession={setActiveId}
-        onDeleteSession={handleDelete}
-        onSendMessage={handleNewMessage}
-        theme={chatTheme}
-      >
-      <SessionsList>
-          <div className="flex flex-col p-2">  {/* Changed to column layout */}
-            {/* this can be replaced with the regular session button if we dont want confirmation on new chat */}
-            <InterceptedNewSessionButton 
-              newSessionText="New Chat" 
-              confirmationMessage="Are you sure you want to start a new chat?"
-            />
-            {activeId &&
-              <button
-                disabled={!activeId}
-                onClick={handleDownloadSession}                
-                className="whitespace-no-wrap select-none items-center justify-center font-sans font-semibold disabled:cursor-not-allowed data-[variant=filled]:disabled:bg-gray-600 disabled:text-gray-400 flex w-full light:text-gray-100 border-primary text-base px-4 py-2 leading-[normal] m-0 relative mb-4 rounded-[10px] text-white bg-[#1a568c] hover:bg-[#41ABF5] transition-colors"
-              >
-                Export Chat
-            </button>}
-          </div>
+      <Header />
 
-          <SessionGroups>
-            {(groups) =>
-              groups.map(({ heading, sessions }) => (
-                <SessionsGroup heading={heading} key={heading}>
-                  {sessions.map((s) => (
-                    <EditableSessionListItem 
-                      key={s.id} 
-                      session={s}
-                      onUpdateTitle={(id, newTitle) => { updateSessionTitle(id, newTitle);}}
-                    />
-                  ))}
-                </SessionsGroup>
-              ))
-            }
-          </SessionGroups>
-        </SessionsList>
+      <div className="flex-1 p-2 main-container pb-6">
+        <Chat
+          sessions={sessions}
+          activeSessionId={activeId}
+          isLoading={loading}
+          onNewSession={handleNewSession}
+          onSelectSession={setActiveId}
+          onDeleteSession={handleDelete}
+          onSendMessage={handleNewMessage}
+          theme={chatTheme}
+        >
+          <SessionsList>
+            <div className="flex flex-col p-2">
+              {" "}
+              {/* Changed to column layout */}
+              {/* this can be replaced with the regular session button if we dont want confirmation on new chat */}
+              <InterceptedNewSessionButton
+                newSessionText="New Chat"
+                confirmationMessage="Are you sure you want to start a new chat?"
+              />
+              {activeId && (
+                <button
+                  disabled={!activeId}
+                  onClick={handleDownloadSession}
+                  className="whitespace-no-wrap select-none items-center justify-center font-sans font-semibold disabled:cursor-not-allowed data-[variant=filled]:disabled:bg-gray-600 disabled:text-gray-400 flex w-full light:text-gray-100 border-primary text-base px-4 py-2 leading-[normal] m-0 relative mb-4 rounded-[10px] text-white bg-[#1a568c] hover:bg-[#41ABF5] transition-colors"
+                >
+                  Export Chat
+                </button>
+              )}
+            </div>
 
-        <SessionMessagePanel>
-          <SessionMessagesHeader />
-          <SessionMessages>
-              {conversations => conversations.map((conversation) => (
-                <SessionMessageCustom 
-                  key={conversation.id} 
-                  conversation={conversation as ConversationExt}
-                />
-              ))}
-          </SessionMessages>
-          {activeId && <ChatInput            
-          placeholder='"What studies are available on asthma and COPD?" '/>}
-        </SessionMessagePanel>        
-      </Chat>      
+            <SessionGroups>
+              {(groups) =>
+                groups.map(({ heading, sessions }) => (
+                  <SessionsGroup heading={heading} key={heading}>
+                    {sessions.map((s) => (
+                      <EditableSessionListItem
+                        key={s.id}
+                        session={s}
+                        onUpdateTitle={(id, newTitle) => {
+                          updateSessionTitle(id, newTitle);
+                        }}
+                      />
+                    ))}
+                  </SessionsGroup>
+                ))
+              }
+            </SessionGroups>
+          </SessionsList>
+
+          <SessionMessagePanel>
+            <SessionMessagesHeader />
+            <SessionMessages>
+              {(conversations) =>
+                conversations.map((conversation) => (
+                  <SessionMessageCustom
+                    key={conversation.id}
+                    conversation={conversation as ConversationExt}
+                  />
+                ))
+              }
+            </SessionMessages>
+            {activeId && (
+              <ChatInput placeholder='"What studies are available on asthma and COPD?" ' />
+            )}
+          </SessionMessagePanel>
+        </Chat>
+      </div>
+
+      <Footer />
     </div>
-
-    <Footer />
-   </div>
   );
 }
 
