@@ -2,8 +2,8 @@ export const sendChatMessage = async (message: string, chatHistory: any[], apiUr
     // @TODO find some way to make these configurable on run time
     // https://koios-llama.apps.renci.org/dug-qa/
     // https://koios-kg.apps.renci.org/kg-app/invoke
-
-    const response = await fetch(apiUrl, {
+    const invokeUrl = apiUrl + '/invoke'
+    const response = await fetch(invokeUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -27,4 +27,30 @@ export const sendChatMessage = async (message: string, chatHistory: any[], apiUr
       })
     });
     return response.json();
+  };
+
+  export const upvoteHandler = async (traceUrl: string) => {
+    // @TODO find some way to make these configurable on run time
+    // https://koios-llama.apps.renci.org/dug-qa/
+    // https://koios-kg.apps.renci.org/kg-app/invoke
+    const scoreUrl = traceUrl + '/good' 
+    const response = await fetch(scoreUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+  };
+
+  export const downvoteHandler = async (traceUrl: string) => {
+    // @TODO find some way to make these configurable on run time
+    // https://koios-llama.apps.renci.org/dug-qa/
+    // https://koios-kg.apps.renci.org/kg-app/invoke
+    const scoreUrl = traceUrl + '/bad' 
+    const response = await fetch(scoreUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
   };

@@ -3,6 +3,7 @@ import { Conversation, Session } from 'reachat';
 
 export interface ConversationExt extends Conversation {
   kg: KnowledgeGraphData | null;
+  traceUrl: string ;
 }
 
 export interface Session_ext extends Session {
