@@ -8,6 +8,7 @@ import {
 } from "reachat";
 import { GraphVisualization } from "./GraphVisualization";
 import { ConversationExt } from "../types/types";
+import { upvoteHandler, downvoteHandler } from "../services/api.service";
 import { FC } from "react";
 
 interface Props {
@@ -54,6 +55,15 @@ export const SessionMessageCustom: FC<Props> = ({ conversation, isLast }) => {
         <MessageActions
           question={conversation.question}
           response={conversation.response}
+          onUpvote={() => {
+             upvoteHandler(conversation.traceUrl)
+          }}
+          onDownvote={
+            () => {
+              downvoteHandler(conversation.traceUrl)
+            }
+          }
+
         />
       </div>
     </SessionMessage>

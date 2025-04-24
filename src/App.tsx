@@ -94,6 +94,7 @@ function App() {
       createdAt: new Date(),
       updatedAt: new Date(),
       kg: null,
+      traceUrl: '',
     };
     try {
       const curr = sessions.find((s) => s.id === activeId);
@@ -137,10 +138,12 @@ function App() {
 
       const knowledge_graph = data.output?.extra?.knowledge_graph;
       const processedKg = processKnowledgeGraph(knowledge_graph);
+      const trace_id = data.output?.extra?.trace_id;
 
       newMessage.kg = processedKg;
       newMessage.response = output;
       newMessage.sources = sources;
+      newMessage.traceUrl = config.apiUrl + '/score/' + trace_id
 
       setSessions([...sessions.filter((s) => s.id !== activeId), updated]);
       setLoading(false);
