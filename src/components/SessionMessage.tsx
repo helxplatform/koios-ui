@@ -63,6 +63,24 @@ export const SessionMessageCustom: FC<Props> = ({ conversation, isLast }) => {
               downvoteHandler(conversation.traceUrl)
             }
           }
+          onCopy={() => {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(conversation.response || "")
+                .then(() => {
+                  // Optional: Add feedback to the user (e.g., show a toast notification)
+                  console.log('Response copied to clipboard!');
+                })
+                .catch(err => {
+                  // Handle potential errors (e.g., user denied permission, browser limitations)
+                  console.error('Failed to copy text: ', err);
+                });
+            } else {
+              // Fallback for older browsers or environments where clipboard API is not available
+              console.warn('Clipboard API not supported.');
+              // You could potentially implement a fallback using the older document.execCommand('copy') here,
+              // but it's generally less reliable and has security considerations.
+            }
+          }}
 
         />
       </div>
