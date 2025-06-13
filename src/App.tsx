@@ -140,7 +140,7 @@ function App() {
       const processedKg = processKnowledgeGraph(knowledge_graph);
       const trace_id = data.output?.extra?.trace_id;
 
-      newMessage.kg = processedKg;
+      newMessage.kg = processedKg && Object.keys(processedKg).length > 0 ? processedKg : null; 
       newMessage.response = output;
       newMessage.sources = sources;
       newMessage.traceUrl = config.apiUrl + '/score/' + trace_id
