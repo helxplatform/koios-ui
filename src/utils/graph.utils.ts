@@ -36,7 +36,8 @@ function stringToColor(str: string): { rgb: string, hex: string } {
 
 
 export const processKnowledgeGraph = (kg: any): KnowledgeGraphData | null => {
-    if (!kg) return null;
+    // Check if kg has no nodes or edge before displaying
+    if (!kg || !kg.nodes || !kg.edges ) return null;
     
     const finalkg =  {
       links: kg.edges?.map((edge: any) => ({
