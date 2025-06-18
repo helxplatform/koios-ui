@@ -6,10 +6,19 @@ export function findDbGaPIds(text) {
     // Find all matches in the input text
     const phsMatches = text.match(phsRegex) || [];
     const phvMatches = text.match(phvRegex) || [];
+        
+    // Function to get unique elements from an array
+    const getUnique = (arr) => {
+        return arr.filter((value, index, self) => {
+            return self.indexOf(value) === index;
+        });
+    };
 
-    // Combine both matches and return them as a list
+    const uniquePhsMatches = getUnique(phsMatches);
+    const uniquePhvMatches = getUnique(phvMatches);
+
     return {
-        phs: phsMatches,
-        phv: phvMatches
+        phs: uniquePhsMatches,
+        phv: uniquePhvMatches
     };
 }
